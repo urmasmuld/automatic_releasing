@@ -91,4 +91,3 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git commit -am "Bump version to $TAG"
           git push --follow-tags
-
