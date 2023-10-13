@@ -96,5 +96,3 @@ jobs:
             -d "{
               \"prerelease\": $PRERELEASE
             }"
-
-            
