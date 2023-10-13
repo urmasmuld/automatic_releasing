@@ -42,11 +42,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION_BUMP=$(echo ${{ steps.version.outputs.version-bump }})
-          if [ "$VERSION_BUMP" == "patch" ]; then
+          if [ "${VERSION_BUMP,,}" == "patch" ]; then
             npm --no-git-tag-version version patch
-          elif [ "$VERSION_BUMP" == "minor" ]; then
+          elif [ "${VERSION_BUMP,,}" == "minor" ]; then
             npm --no-git-tag-version version minor
-          elif [ "$VERSION_BUMP" == "major" ]; then
+          elif [ "${VERSION_BUMP,,}" == "major" ]; then
             npm --no-git-tag-version version major
           # If no major,minor or patch in commit message, then consider it to be patch
           else
@@ -80,8 +80,6 @@ jobs:
 
           # Extract the release ID from the API response
           RELEASE_ID=$(echo "$response" | jq -r '.id')
-          # Extract the release ID from the API response
-          RELEASE_ID=$(echo "$response" | jq -r '.id')
 
           # Mark the release as a prerelease
           # Check if $TAG starts with "0."
@@ -96,3 +94,4 @@ jobs:
             -d "{
               \"prerelease\": $PRERELEASE
             }"
+
