@@ -57,12 +57,13 @@ jobs:
           TAG=$(git describe --abbrev=0 --tags HEAD || echo "$(node -p "require('./package.json').version")")
 
           TITLE="Release $TAG"
+          PACK="$COMMIT_MESSAGE"
           BODY="$COMMIT_MESSAGE"
 
           # Commit and push the updated package.json
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git commit -am "${BODY}"
+          git commit -am "${PACK}"
           git push
 
           # Create the release
