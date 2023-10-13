@@ -32,6 +32,7 @@ jobs:
           elif [[ $COMMIT_MESSAGE == "Major:"* ]]; then
             echo "::set-output name=version-bump::major"
           fi
+          echo "Commit message: $COMMIT_MESSAGE"
         shell: bash
 
       - name: Fetch Tags
@@ -63,7 +64,7 @@ jobs:
           # Commit and push the updated package.json
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git commit -am "$COMMIT_MESSAGE"
+          git commit -m "${{ steps.version.outputs.commit_message }}"
           git push
 
           # Create the release
