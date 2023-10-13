@@ -55,6 +55,9 @@ jobs:
           # Use "0.0.1" as the default version if no tags were found
           TAG=$(git describe --abbrev=0 --tags HEAD || echo "$(node -p "require('./package.json').version")")
 
+          # Capture the commit message for the release body
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:%s)
+
           TITLE="Release $TAG"
           BODY="$COMMIT_MESSAGE"
 
@@ -71,28 +74,3 @@ jobs:
 
           # Extract the release ID from the API response
           RELEASE_ID=$(echo "$response" | jq -r '.id')
-
-          # Mark the release as a prerelease
-          # Check if $TAG starts with "0."
-          if [[ $TAG == 0.* ]]; then
-            PRERELEASE=true
-          else
-            PRERELEASE=false
-          fi
-
-          curl -X PATCH "https://api.github.com/repos/${{ github.repository }}/releases/${RELEASE_ID}" \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -d "{
-              \"prerelease\": $PRERELEASE
-            }"
-
-          # Copy the updated package.json to a release directory
-          mkdir release
-          cp package.json release/package.json
-
-          # Commit and push the updated package.json and release directory
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git add package.json release
-          git commit -m "Bump version to $TAG and include updated package.json in release"
-          git push --follow-tags
