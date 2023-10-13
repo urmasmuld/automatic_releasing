@@ -25,14 +25,12 @@ jobs:
         id: version
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=format:%s)
-          if [[ $COMMIT_MESSAGE == "feat:"* ]]; then
-            echo "::set-output name=version-bump::minor"
-          elif [[ $COMMIT_MESSAGE == "fix:"* ]]; then
+          if [[ $COMMIT_MESSAGE == "Patch:"* ]]; then
             echo "::set-output name=version-bump::patch"
-          elif [[ $COMMIT_MESSAGE == "rel:"* ]]; then
+          elif [[ $COMMIT_MESSAGE == "Minor:"* ]]; then
+            echo "::set-output name=version-bump::minor"
+          elif [[ $COMMIT_MESSAGE == "Major:"* ]]; then
             echo "::set-output name=version-bump::major"
-          else
-            echo "::set-output name=version-bump::none"
           fi
         shell: bash
 
@@ -44,19 +42,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION_BUMP=$(echo ${{ steps.version.outputs.version-bump }})
-          if [ "$VERSION_BUMP" == "minor" ]; then
-            npm --no-git-tag-version version minor
-          elif [ "$VERSION_BUMP" == "patch" ]; then
+          if [ "$VERSION_BUMP" == "patch" ]; then
             npm --no-git-tag-version version patch
+          elif [ "$VERSION_BUMP" == "minor" ]; then
+            npm --no-git-tag-version version minor
           elif [ "$VERSION_BUMP" == "major" ]; then
             npm --no-git-tag-version version major
+          # If no major,minor or patch in commit message, then consider it to be patch
+          else
+            npm --no-git-tag-version version patch
           fi
 
-          # Use "0.0.1" as the default version if no tags were found
+          # Use version from "package.json" as the default version if no tags were found
           TAG=$(git describe --abbrev=0 --tags HEAD || echo "$(node -p "require('./package.json').version")")
 
           TITLE="Release $TAG"
           BODY="$COMMIT_MESSAGE"
+
+          # Commit and push the updated package.json
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git commit -am "${BODY}"
+          git push
 
           # Create the release
           response=$(curl -X POST "https://api.github.com/repos/${{ github.repository }}/releases" \
@@ -86,8 +93,3 @@ jobs:
               \"prerelease\": $PRERELEASE
             }"
 
-          # Commit and push the updated package.json
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git commit -am "Bump version to $TAG"
-          git push --follow-tags
